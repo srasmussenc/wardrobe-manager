@@ -8,6 +8,7 @@ import ClothingList from "./components/ClothingList";
 import ClothingDetail from "./components/ClothingDetail";
 import UploadClothing from "./components/UploadClothing";
 import OutfitList from "./components/OutfitList";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/ropa/:id" element={<ClothingDetail />} />
           <Route path="/subir" element={<UploadClothing />} />
           <Route path="/outfits" element={<OutfitList />} />
+          <Route path="/install" element={<Install />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
