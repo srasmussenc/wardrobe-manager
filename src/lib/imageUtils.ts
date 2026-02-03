@@ -1,11 +1,14 @@
 /**
  * Compress an image to reduce storage size
  * This helps avoid localStorage quota limits on mobile devices
+ * 
+ * With 400px max width and 50% quality, images are ~15-25KB each
+ * localStorage limit is ~5MB, so this allows 200+ items
  */
 export const compressImage = (
   file: File,
-  maxWidth: number = 800,
-  quality: number = 0.7
+  maxWidth: number = 400,
+  quality: number = 0.5
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
