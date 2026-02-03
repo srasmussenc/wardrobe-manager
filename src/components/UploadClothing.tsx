@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Sparkles } from 'lucide-react';
+import { ArrowLeft, Camera } from 'lucide-react';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { ClothingType, CLOTHING_TYPES, COLORS, SIZES } from '@/types/clothing';
+import { compressImage } from '@/lib/imageUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,37 +27,23 @@ const UploadClothing = () => {
   const [width, setWidth] = useState<string>('');
   const [length, setLength] = useState<string>('');
   const [brand, setBrand] = useState<string>('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiSuggested, setAiSuggested] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImageUrl(result);
-        // Simulate AI analysis
-        analyzeImage();
-      };
-      reader.readAsDataURL(file);
+      setIsLoading(true);
+      try {
+        // Compress image to avoid localStorage quota limits
+        const compressedImage = await compressImage(file, 800, 0.7);
+        setImageUrl(compressedImage);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        toast.error('Error al procesar la imagen');
+      } finally {
+        setIsLoading(false);
+      }
     }
-  };
-
-  const analyzeImage = () => {
-    setIsAnalyzing(true);
-    // Simulate AI analysis - in production, this would call an AI service
-    setTimeout(() => {
-      // Random suggestions for demo
-      const suggestedColors = ['negro', 'blanco', 'azul', 'gris'];
-      const suggestedTypes: ClothingType[] = ['camiseta', 'camisa', 'pantalon', 'sudadera'];
-      
-      setColor(suggestedColors[Math.floor(Math.random() * suggestedColors.length)]);
-      setType(suggestedTypes[Math.floor(Math.random() * suggestedTypes.length)]);
-      setIsAnalyzing(false);
-      setAiSuggested(true);
-      toast.success('IA ha detectado color y tipo');
-    }, 1500);
   };
 
   const handleSubmit = () => {
@@ -69,18 +56,23 @@ const UploadClothing = () => {
       return;
     }
 
-    addClothing({
-      imageUrl,
-      type,
-      color,
-      size,
-      width: width || undefined,
-      length: length || undefined,
-      brand,
-    });
+    try {
+      addClothing({
+        imageUrl,
+        type,
+        color,
+        size,
+        width: width || undefined,
+        length: length || undefined,
+        brand,
+      });
 
-    toast.success('Prenda añadida');
-    navigate('/ropa');
+      toast.success('Prenda añadida');
+      navigate('/ropa');
+    } catch (error) {
+      console.error('Error saving clothing:', error);
+      toast.error('Error al guardar. Intenta con una imagen más pequeña.');
+    }
   };
 
   return (
@@ -112,21 +104,15 @@ const UploadClothing = () => {
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />
-                {isAnalyzing && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                    <div className="text-center">
-                      <Sparkles className="w-8 h-8 text-primary animate-pulse mx-auto" />
-                      <p className="text-sm text-muted-foreground mt-2">Analizando con IA...</p>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="aspect-square flex flex-col items-center justify-center gap-3">
                 <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
                   <Camera className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <p className="text-muted-foreground">Toca para subir foto</p>
+                <p className="text-muted-foreground">
+                  {isLoading ? 'Procesando...' : 'Toca para subir foto'}
+                </p>
               </div>
             )}
             <input
@@ -137,15 +123,6 @@ const UploadClothing = () => {
               className="hidden"
             />
           </div>
-
-          {aiSuggested && (
-            <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-xl">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <p className="text-sm text-primary">
-                Color y tipo detectados por IA. Puedes editarlos si lo deseas.
-              </p>
-            </div>
-          )}
 
           {/* Form Fields */}
           <div className="space-y-4 bg-card rounded-2xl p-4 border border-border/50">
