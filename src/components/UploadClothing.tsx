@@ -45,8 +45,8 @@ const UploadClothing = () => {
     if (file) {
       setIsLoading(true);
       try {
-        // Compress image to ~15-25KB to allow 200+ items in localStorage
-        const compressedImage = await compressImage(file, 400, 0.5);
+        // Compress image - with IndexedDB we can use better quality (600px, 65%)
+        const compressedImage = await compressImage(file, 600, 0.65);
         setImageUrl(compressedImage);
       } catch (error) {
         console.error('Error compressing image:', error);

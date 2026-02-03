@@ -1,14 +1,14 @@
 /**
  * Compress an image to reduce storage size
- * This helps avoid localStorage quota limits on mobile devices
  * 
- * With 400px max width and 50% quality, images are ~15-25KB each
- * localStorage limit is ~5MB, so this allows 200+ items
+ * With IndexedDB (50MB+), we can use better quality:
+ * 600px max width and 65% quality = ~40-50KB per image
+ * This allows 1000+ items with good image quality
  */
 export const compressImage = (
   file: File,
-  maxWidth: number = 400,
-  quality: number = 0.5
+  maxWidth: number = 600,
+  quality: number = 0.65
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
