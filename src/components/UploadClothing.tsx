@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useWardrobeStore } from '@/store/wardrobeStore';
-import { ClothingType, CLOTHING_TYPES, COLORS, SIZES } from '@/types/clothing';
+import { ClothingType, CLOTHING_TYPES, COLORS, SIZES, SHOE_SIZES, isFootwear } from '@/types/clothing';
 import { compressImage } from '@/lib/imageUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,21 +21,32 @@ const UploadClothing = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [imageUrl, setImageUrl] = useState<string>('');
-  const [type, setType] = useState<ClothingType>('camiseta');
+  const [type, setType] = useState<ClothingType | ''>('');
   const [color, setColor] = useState<string>('');
-  const [size, setSize] = useState<string>('M');
+  const [size, setSize] = useState<string>('');
   const [width, setWidth] = useState<string>('');
   const [length, setLength] = useState<string>('');
   const [brand, setBrand] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleTypeChange = (value: ClothingType) => {
+    setType(value);
+    // Reset size when type changes
+    setSize('');
+    // Clear measurements if footwear
+    if (isFootwear(value)) {
+      setWidth('');
+      setLength('');
+    }
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsLoading(true);
       try {
-        // Compress image to avoid localStorage quota limits
-        const compressedImage = await compressImage(file, 800, 0.7);
+        // Compress image to ~15-25KB to allow 200+ items in localStorage
+        const compressedImage = await compressImage(file, 400, 0.5);
         setImageUrl(compressedImage);
       } catch (error) {
         console.error('Error compressing image:', error);
@@ -49,6 +60,10 @@ const UploadClothing = () => {
   const handleSubmit = () => {
     if (!imageUrl) {
       toast.error('Por favor, sube una foto');
+      return;
+    }
+    if (!type) {
+      toast.error('Por favor, selecciona un tipo de prenda');
       return;
     }
     if (!color) {
@@ -74,6 +89,9 @@ const UploadClothing = () => {
       toast.error('Error al guardar. Intenta con una imagen más pequeña.');
     }
   };
+
+  const currentSizes = type && isFootwear(type) ? SHOE_SIZES : SIZES;
+  const showMeasurements = type && !isFootwear(type);
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,13 +144,14 @@ const UploadClothing = () => {
 
           {/* Form Fields */}
           <div className="space-y-4 bg-card rounded-2xl p-4 border border-border/50">
+            {/* Type - Always first */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">
                 Tipo de prenda *
               </label>
-              <Select value={type} onValueChange={(v) => setType(v as ClothingType)}>
+              <Select value={type} onValueChange={handleTypeChange}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecciona el tipo" />
                 </SelectTrigger>
                 <SelectContent>
                   {CLOTHING_TYPES.map((t) => (
@@ -143,6 +162,27 @@ const UploadClothing = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Size - Only shows after type is selected */}
+            {type && (
+              <div className="space-y-2 animate-fade-in">
+                <label className="text-sm font-medium text-muted-foreground">
+                  {isFootwear(type) ? 'Talla de calzado' : 'Talla'}
+                </label>
+                <Select value={size} onValueChange={setSize}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona la talla" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currentSizes.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Color *</label>
@@ -161,22 +201,6 @@ const UploadClothing = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Talla</label>
-              <Select value={size} onValueChange={setSize}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SIZES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Marca</label>
               <Input
                 value={brand}
@@ -185,26 +209,29 @@ const UploadClothing = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Ancho (cm)</label>
-                <Input
-                  value={width}
-                  onChange={(e) => setWidth(e.target.value)}
-                  placeholder="Ej: 50"
-                  type="number"
-                />
+            {/* Measurements - Only for non-footwear */}
+            {showMeasurements && (
+              <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Ancho (cm)</label>
+                  <Input
+                    value={width}
+                    onChange={(e) => setWidth(e.target.value)}
+                    placeholder="Ej: 50"
+                    type="number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Largo (cm)</label>
+                  <Input
+                    value={length}
+                    onChange={(e) => setLength(e.target.value)}
+                    placeholder="Ej: 70"
+                    type="number"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Largo (cm)</label>
-                <Input
-                  value={length}
-                  onChange={(e) => setLength(e.target.value)}
-                  placeholder="Ej: 70"
-                  type="number"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           <Button onClick={handleSubmit} className="w-full h-12 text-base">
