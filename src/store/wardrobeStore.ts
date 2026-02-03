@@ -1,6 +1,10 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { ClothingItem, Outfit, OutfitOfToday } from '@/types/clothing';
+import { indexedDBStorage, migrateFromLocalStorage } from '@/lib/indexedDBStorage';
+
+// Run migration from localStorage to IndexedDB on app start
+migrateFromLocalStorage();
 
 interface WardrobeState {
   clothes: ClothingItem[];
@@ -94,6 +98,7 @@ export const useWardrobeStore = create<WardrobeState>()(
     }),
     {
       name: 'wardrobe-storage',
+      storage: createJSONStorage(() => indexedDBStorage),
     }
   )
 );
