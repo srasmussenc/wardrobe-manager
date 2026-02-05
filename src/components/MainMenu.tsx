@@ -1,4 +1,4 @@
-import { Shirt, Layers, Upload } from 'lucide-react';
+ import { Shirt, Layers, Ruler } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MainMenu = () => {
@@ -18,10 +18,10 @@ const MainMenu = () => {
       path: '/outfits',
     },
     {
-      icon: Upload,
-      label: 'Subir ropa',
-      description: 'Añadir nueva prenda',
-      path: '/subir',
+       icon: Ruler,
+       label: 'Comparar tallas',
+       description: 'Buscar prendas similares',
+       path: '/comparar',
     },
   ];
 

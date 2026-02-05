@@ -8,26 +8,37 @@ import ClothingList from "./components/ClothingList";
 import ClothingDetail from "./components/ClothingDetail";
 import UploadClothing from "./components/UploadClothing";
 import OutfitList from "./components/OutfitList";
+ import SizeComparison from "./components/SizeComparison";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
+ import { useBackButton } from "./hooks/useBackButton";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+ const AppContent = () => {
+   useBackButton();
+   
+   return (
+     <Routes>
+       <Route path="/" element={<MainMenu />} />
+       <Route path="/ropa" element={<ClothingList />} />
+       <Route path="/ropa/:id" element={<ClothingDetail />} />
+       <Route path="/subir" element={<UploadClothing />} />
+       <Route path="/outfits" element={<OutfitList />} />
+       <Route path="/comparar" element={<SizeComparison />} />
+       <Route path="/install" element={<Install />} />
+       <Route path="*" element={<NotFound />} />
+     </Routes>
+   );
+ };
+ 
+ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<MainMenu />} />
-          <Route path="/ropa" element={<ClothingList />} />
-          <Route path="/ropa/:id" element={<ClothingDetail />} />
-          <Route path="/subir" element={<UploadClothing />} />
-          <Route path="/outfits" element={<OutfitList />} />
-          <Route path="/install" element={<Install />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+         <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

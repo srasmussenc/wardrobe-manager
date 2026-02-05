@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Filter, SortAsc } from 'lucide-react';
+ import { ArrowLeft, Filter, SortAsc, Plus } from 'lucide-react';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { ClothingType, CLOTHING_TYPES, COLORS } from '@/types/clothing';
 import ClothingCard from './ClothingCard';
@@ -96,6 +96,12 @@ const ClothingList = () => {
           </button>
           <h1 className="font-display text-xl font-medium">Mi Ropa</h1>
           <div className="flex gap-2">
+             <button
+               onClick={() => navigate('/subir')}
+               className="p-2 hover:bg-secondary rounded-xl transition-colors"
+             >
+               <Plus className="w-5 h-5 text-foreground" />
+             </button>
             <Sheet>
               <SheetTrigger asChild>
                 <button className="p-2 hover:bg-secondary rounded-xl transition-colors relative">
