@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useWardrobeStore } from '@/store/wardrobeStore';
-import { ClothingType, CLOTHING_TYPES, COLORS, SIZES, SHOE_SIZES, isFootwear } from '@/types/clothing';
+import { ClothingType, CLOTHING_TYPES, COLORS, SIZES, SHOE_SIZES, PANT_SIZES_EUR, PANT_SIZES_US, SizeSystem, isFootwear, isPants } from '@/types/clothing';
 import { compressImage } from '@/lib/imageUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,13 +27,13 @@ const UploadClothing = () => {
   const [width, setWidth] = useState<string>('');
   const [length, setLength] = useState<string>('');
   const [brand, setBrand] = useState<string>('');
+  const [sizeSystem, setSizeSystem] = useState<SizeSystem>('US');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleTypeChange = (value: ClothingType) => {
     setType(value);
-    // Reset size when type changes
     setSize('');
-    // Clear measurements if footwear
+    setSizeSystem('US');
     if (isFootwear(value)) {
       setWidth('');
       setLength('');
@@ -90,7 +90,12 @@ const UploadClothing = () => {
     }
   };
 
-  const currentSizes = type && isFootwear(type) ? SHOE_SIZES : SIZES;
+  const getCurrentSizes = () => {
+    if (type && isFootwear(type)) return SHOE_SIZES;
+    if (type && isPants(type)) return sizeSystem === 'EUR' ? PANT_SIZES_EUR : PANT_SIZES_US;
+    return SIZES;
+  };
+  const currentSizes = getCurrentSizes();
   const showMeasurements = type && !isFootwear(type);
 
   return (
@@ -165,23 +170,52 @@ const UploadClothing = () => {
 
             {/* Size - Only shows after type is selected */}
             {type && (
-              <div className="space-y-2 animate-fade-in">
-                <label className="text-sm font-medium text-muted-foreground">
-                  {isFootwear(type) ? 'Talla de calzado' : 'Talla'}
-                </label>
-                <Select value={size} onValueChange={setSize}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona la talla" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currentSizes.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                {/* Size System Toggle for pants/shorts */}
+                {isPants(type) && (
+                  <div className="space-y-2 animate-fade-in">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Sistema de talla
+                    </label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={sizeSystem === 'US' ? 'default' : 'outline'}
+                        className="flex-1"
+                        onClick={() => { setSizeSystem('US'); setSize(''); }}
+                      >
+                        US
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={sizeSystem === 'EUR' ? 'default' : 'outline'}
+                        className="flex-1"
+                        onClick={() => { setSizeSystem('EUR'); setSize(''); }}
+                      >
+                        EUR
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2 animate-fade-in">
+                  <label className="text-sm font-medium text-muted-foreground">
+                    {isFootwear(type) ? 'Talla de calzado' : 'Talla'}
+                  </label>
+                  <Select value={size} onValueChange={setSize}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona la talla" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currentSizes.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             <div className="space-y-2">
