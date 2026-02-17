@@ -2,7 +2,7 @@
  import { useNavigate } from 'react-router-dom';
  import { ArrowLeft, Search } from 'lucide-react';
  import { useWardrobeStore } from '@/store/wardrobeStore';
- import { ClothingType, CLOTHING_TYPES, SIZES, SHOE_SIZES, isFootwear } from '@/types/clothing';
+ import { ClothingType, CLOTHING_TYPES, SIZES, SHOE_SIZES, PANT_SIZES_EUR, PANT_SIZES_US, SizeSystem, isFootwear, isPants } from '@/types/clothing';
  import ClothingCard from './ClothingCard';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
@@ -25,9 +25,10 @@
  
    const [type, setType] = useState<ClothingType | ''>('');
    const [brand, setBrand] = useState<string>('');
-   const [size, setSize] = useState<string>('');
-   const [width, setWidth] = useState<string>('');
-   const [length, setLength] = useState<string>('');
+  const [size, setSize] = useState<string>('');
+  const [sizeSystem, setSizeSystem] = useState<SizeSystem>('US');
+  const [width, setWidth] = useState<string>('');
+  const [length, setLength] = useState<string>('');
    const [hasSearched, setHasSearched] = useState(false);
    const [results, setResults] = useState<ScoredItem[]>([]);
  
@@ -41,17 +42,23 @@
      return uniqueBrands;
    }, [clothes, type]);
  
-   const currentSizes = type && isFootwear(type) ? SHOE_SIZES : SIZES;
-   const showMeasurements = type && !isFootwear(type);
+  const getCurrentSizes = () => {
+    if (type && isFootwear(type)) return SHOE_SIZES;
+    if (type && isPants(type)) return sizeSystem === 'EUR' ? PANT_SIZES_EUR : PANT_SIZES_US;
+    return SIZES;
+  };
+  const currentSizes = getCurrentSizes();
+  const showMeasurements = type && !isFootwear(type);
  
    const handleTypeChange = (value: ClothingType) => {
      setType(value);
-     setSize('');
-     setBrand('');
-     setWidth('');
-     setLength('');
-     setHasSearched(false);
-     setResults([]);
+      setSize('');
+      setSizeSystem('US');
+      setBrand('');
+      setWidth('');
+      setLength('');
+      setHasSearched(false);
+      setResults([]);
    };
  
    const handleSearch = () => {
@@ -178,6 +185,33 @@
                    )}
                  </div>
  
+                 {/* Size System Toggle for pants/shorts */}
+                 {isPants(type) && (
+                   <div className="space-y-2 animate-fade-in">
+                     <label className="text-sm font-medium text-muted-foreground">
+                       Sistema de talla
+                     </label>
+                     <div className="flex gap-2">
+                       <Button
+                         type="button"
+                         variant={sizeSystem === 'US' ? 'default' : 'outline'}
+                         className="flex-1"
+                         onClick={() => { setSizeSystem('US'); setSize(''); }}
+                       >
+                         US
+                       </Button>
+                       <Button
+                         type="button"
+                         variant={sizeSystem === 'EUR' ? 'default' : 'outline'}
+                         className="flex-1"
+                         onClick={() => { setSizeSystem('EUR'); setSize(''); }}
+                       >
+                         EUR
+                       </Button>
+                     </div>
+                   </div>
+                 )}
+
                  {/* Size */}
                  <div className="space-y-2 animate-fade-in">
                    <label className="text-sm font-medium text-muted-foreground">

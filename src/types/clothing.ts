@@ -63,6 +63,14 @@ export const COLORS = [
 
 export const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
+export const PANT_SIZES_EUR = ['38 EUR', '40 EUR', '42 EUR', '44 EUR', '46 EUR', '48 EUR', '50 EUR'];
+
+export const PANT_SIZES_US = ['XS', 'S', 'M', 'L', 'XL'];
+
+export type SizeSystem = 'US' | 'EUR';
+
 export const SHOE_SIZES = ['7 US', '7.5 US', '8 US', '8.5 US', '9 US', '9.5 US', '10 US', '10.5 US', '11 US', '11.5 US', '12 US', '12.5 US', '13 US'];
 
 export const isFootwear = (type: ClothingType): boolean => type === 'zapatos';
+
+export const isPants = (type: ClothingType): boolean => type === 'pantalon' || type === 'shorts';

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Trash2, Edit2, Save, X } from 'lucide-react';
 import { useWardrobeStore } from '@/store/wardrobeStore';
-import { CLOTHING_TYPES, COLORS, SIZES } from '@/types/clothing';
+import { CLOTHING_TYPES, COLORS, SIZES, SHOE_SIZES, PANT_SIZES_EUR, PANT_SIZES_US, SizeSystem, isFootwear, isPants } from '@/types/clothing';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -33,6 +33,11 @@ const ClothingDetail = () => {
   const clothing = clothes.find((c) => c.id === id);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(clothing);
+  const [sizeSystem, setSizeSystem] = useState<SizeSystem>(() => {
+    // Detect current size system from existing size
+    if (clothing?.size && clothing.size.includes('EUR')) return 'EUR';
+    return 'US';
+  });
 
   if (!clothing || !editData) {
     return (
@@ -197,6 +202,31 @@ const ClothingDetail = () => {
                 </Select>
               </div>
 
+              {/* Size System Toggle for pants/shorts */}
+              {editData.type && isPants(editData.type) && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Sistema de talla</label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={sizeSystem === 'US' ? 'default' : 'outline'}
+                      className="flex-1"
+                      onClick={() => { setSizeSystem('US'); setEditData({ ...editData, size: '' }); }}
+                    >
+                      US
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={sizeSystem === 'EUR' ? 'default' : 'outline'}
+                      className="flex-1"
+                      onClick={() => { setSizeSystem('EUR'); setEditData({ ...editData, size: '' }); }}
+                    >
+                      EUR
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">Talla</label>
                 <Select
@@ -207,7 +237,12 @@ const ClothingDetail = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SIZES.map((size) => (
+                    {(editData.type && isFootwear(editData.type)
+                      ? SHOE_SIZES
+                      : editData.type && isPants(editData.type)
+                        ? (sizeSystem === 'EUR' ? PANT_SIZES_EUR : PANT_SIZES_US)
+                        : SIZES
+                    ).map((size) => (
                       <SelectItem key={size} value={size}>
                         {size}
                       </SelectItem>
